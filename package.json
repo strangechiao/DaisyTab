@@ -1,0 +1,32 @@
+{
+  "name": "simple-tabs",
+  "description": "+简 Tabs 极致简洁的新标签页",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "vue-tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@iconify/json": "^2.2.507",
+    "@iconify/vue": "^5.0.1",
+    "vue": "^3.5.29"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@wxt-dev/module-vue": "^1.0.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.5",
+    "vue-tsc": "^3.2.5",
+    "web-ext": "^10.5.0",
+    "wxt": "^0.20.27"
+  }
+}

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { browser } from "wxt/browser";
 
 type SearchEngine = {
   name: string;
@@ -8,6 +9,22 @@ type SearchEngine = {
   action: string;
   displayUrl: string;
   queryName: string;
+};
+
+type ThemeMode = "light" | "dark" | "system";
+
+type AppSettings = {
+  openInNewWindow: boolean;
+  isSearchHistoryEnabled: boolean;
+  themeMode: ThemeMode;
+};
+
+type StoredState = {
+  settings?: Partial<AppSettings>;
+  searchHistory?: string[];
+  searchEngines?: SearchEngine[];
+  selectedEngineDisplayUrl?: string;
+  customBackground?: string;
 };
 
 const defaultSearchEngines: SearchEngine[] = [
@@ -91,9 +108,10 @@ const searchInput = ref<HTMLInputElement | null>(null);
 const backgroundInput = ref<HTMLInputElement | null>(null);
 const openInNewWindow = ref(false);
 const isSearchHistoryEnabled = ref(true);
-const themeMode = ref<"light" | "dark" | "system">("system");
+const themeMode = ref<ThemeMode>("system");
 const customBackground = ref("");
 const prefersDarkMode = ref(false);
+const isStorageReady = ref(false);
 const queryName = computed(() => selectedEngine.value.queryName);
 const searchTarget = computed(() => (openInNewWindow.value ? "_blank" : undefined));
 const isDarkMode = computed(() => themeMode.value === "dark" || (themeMode.value === "system" && prefersDarkMode.value));
@@ -168,46 +186,106 @@ const enginePresets: Record<string, Omit<SearchEngine, "displayUrl">> = {
   },
 };
 
-type AppSettings = {
-  openInNewWindow: boolean;
-  isSearchHistoryEnabled: boolean;
-  themeMode: "light" | "dark" | "system";
-};
+function isValidSearchEngine(value: unknown): value is SearchEngine {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
 
-function loadSettings() {
+  const engine = value as SearchEngine;
+
+  return (
+    typeof engine.name === "string" &&
+    typeof engine.icon === "string" &&
+    typeof engine.action === "string" &&
+    typeof engine.displayUrl === "string" &&
+    typeof engine.queryName === "string"
+  );
+}
+
+function getStoredState(): Promise<StoredState> {
+  return browser.storage.local.get(["settings", "searchHistory", "searchEngines", "selectedEngineDisplayUrl", "customBackground"]) as Promise<StoredState>;
+}
+
+function setStoredState(state: StoredState) {
+  return browser.storage.local.set(state);
+}
+
+async function loadStoredState() {
+  let migratedSettings: Partial<AppSettings> = {};
+  let migratedSearchHistory: string[] = [];
+  let migratedCustomBackground = "";
+
   try {
-    const settings = JSON.parse(localStorage.getItem("settings") ?? "{}") as Partial<AppSettings>;
+    migratedSettings = JSON.parse(localStorage.getItem("settings") ?? "{}") as Partial<AppSettings>;
+  } catch {
+    migratedSettings = {};
+  }
+
+  try {
+    const storedHistory = JSON.parse(localStorage.getItem("searchHistory") ?? "[]");
+    migratedSearchHistory = Array.isArray(storedHistory) ? storedHistory.filter((item) => typeof item === "string") : [];
+  } catch {
+    migratedSearchHistory = [];
+  }
+
+  migratedCustomBackground = localStorage.getItem("customBackground") ?? "";
+
+  try {
+    const storedState = await getStoredState();
+    const settings = storedState.settings ?? migratedSettings;
+    const storedSearchHistory = storedState.searchHistory ?? migratedSearchHistory;
+    const storedSearchEngines = storedState.searchEngines?.filter(isValidSearchEngine);
+
     openInNewWindow.value = settings.openInNewWindow ?? openInNewWindow.value;
     isSearchHistoryEnabled.value = settings.isSearchHistoryEnabled ?? isSearchHistoryEnabled.value;
     themeMode.value = settings.themeMode ?? themeMode.value;
-  } catch {
-    // Keep defaults if the stored settings are malformed.
-  }
+    customBackground.value = storedState.customBackground ?? migratedCustomBackground;
+    searchHistory.value = Array.isArray(storedSearchHistory) ? storedSearchHistory.filter((item) => typeof item === "string") : [];
 
-  customBackground.value = localStorage.getItem("customBackground") ?? "";
+    if (storedSearchEngines?.length) {
+      searchEngines.value = storedSearchEngines;
+    }
+
+    selectedEngine.value =
+      searchEngines.value.find((engine) => engine.displayUrl === storedState.selectedEngineDisplayUrl) ?? searchEngines.value[0];
+  } finally {
+    isStorageReady.value = true;
+  }
 }
 
 function saveSettings() {
-  const settings: AppSettings = {
-    openInNewWindow: openInNewWindow.value,
-    isSearchHistoryEnabled: isSearchHistoryEnabled.value,
-    themeMode: themeMode.value,
-  };
+  if (!isStorageReady.value) {
+    return;
+  }
 
-  localStorage.setItem("settings", JSON.stringify(settings));
+  void setStoredState({
+    settings: {
+      openInNewWindow: openInNewWindow.value,
+      isSearchHistoryEnabled: isSearchHistoryEnabled.value,
+      themeMode: themeMode.value,
+    },
+  });
+}
+
+function saveSearchEngines() {
+  if (!isStorageReady.value) {
+    return;
+  }
+
+  void setStoredState({
+    searchEngines: searchEngines.value,
+    selectedEngineDisplayUrl: selectedEngine.value.displayUrl,
+  });
 }
 
 function saveCustomBackground() {
-  try {
-    if (customBackground.value) {
-      localStorage.setItem("customBackground", customBackground.value);
-    } else {
-      localStorage.removeItem("customBackground");
-    }
-  } catch {
-    customBackground.value = "";
-    localStorage.removeItem("customBackground");
+  if (!isStorageReady.value) {
+    return;
   }
+
+  void setStoredState({ customBackground: customBackground.value }).catch(() => {
+    customBackground.value = "";
+  });
 }
 
 function selectEngine(engine: SearchEngine) {
@@ -340,7 +418,7 @@ function saveSearchHistory() {
   }
 
   searchHistory.value = [trimmedQuery, ...searchHistory.value.filter((item) => item !== trimmedQuery)].slice(0, 10);
-  localStorage.setItem("searchHistory", JSON.stringify(searchHistory.value));
+  void setStoredState({ searchHistory: searchHistory.value });
   isHistoryMenuOpen.value = false;
 }
 
@@ -351,7 +429,7 @@ function selectHistoryItem(historyItem: string) {
 
 function removeHistoryItem(historyItem: string) {
   searchHistory.value = searchHistory.value.filter((item) => item !== historyItem);
-  localStorage.setItem("searchHistory", JSON.stringify(searchHistory.value));
+  void setStoredState({ searchHistory: searchHistory.value });
 }
 
 function chooseCustomBackground() {
@@ -400,15 +478,7 @@ function closeMenusOnOutsideClick(event: MouseEvent) {
 }
 
 onMounted(() => {
-  loadSettings();
-
-  try {
-    const storedHistory = JSON.parse(localStorage.getItem("searchHistory") ?? "[]");
-    searchHistory.value = Array.isArray(storedHistory) ? storedHistory.filter((item) => typeof item === "string") : [];
-  } catch {
-    searchHistory.value = [];
-  }
-
+  void loadStoredState();
   const darkModeMedia = window.matchMedia("(prefers-color-scheme: dark)");
   prefersDarkMode.value = darkModeMedia.matches;
 
@@ -429,6 +499,8 @@ onBeforeUnmount(() => {
 });
 
 watch([openInNewWindow, isSearchHistoryEnabled, themeMode], saveSettings);
+watch(searchEngines, saveSearchEngines, { deep: true });
+watch(selectedEngine, saveSearchEngines);
 watch(customBackground, saveCustomBackground);
 </script>
 

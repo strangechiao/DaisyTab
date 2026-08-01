@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   @font-face {
     font-family: "DM Sans";
@@ -27,7 +29,7 @@
 
   :root {
     color: #1f2937;
-    background: #f4f6f8;
+    /* background: #f4f6f8; */
     font-family:
       "DM Sans",
       "Noto Sans SC",
@@ -47,4 +49,72 @@
 /* 动效封装 */
 @utility u-transition {
   @apply transition-all duration-300 ease-in-out;
+}
+
+@layer components {
+  .c-search-form {
+    @apply relative flex w-full max-w-[600px] items-center gap-3 rounded-full border-2 border-slate-300 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900;
+  }
+
+  .c-search-form[data-focused="true"] {
+    @apply border-slate-500 dark:border-slate-500;
+  }
+
+  .c-icon-button {
+    @apply grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-400 transition-all duration-300 ease-in-out hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700;
+  }
+
+  .c-icon {
+    @apply size-5 transition-all duration-300 ease-in-out group-hover:text-slate-600 dark:group-hover:text-slate-300;
+  }
+
+  .c-icon-lg {
+    @apply size-6 text-slate-400 transition-all duration-300 ease-in-out group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300;
+  }
+
+  .c-search-input {
+    @apply min-w-0 flex-1 border-0 bg-transparent text-base text-gray-950 outline-0 dark:text-slate-100;
+  }
+
+  .c-engine-row[data-dragging="true"] {
+    @apply opacity-45;
+  }
+
+  .c-engine-row[data-dragging="false"] {
+    @apply opacity-100;
+  }
+
+  .c-bookmark-grid[data-enabled="false"] {
+    @apply invisible;
+  }
+
+  .c-toggle {
+    @apply bg-slate-200 dark:bg-slate-700;
+  }
+
+  .c-toggle[data-enabled="true"] {
+    @apply bg-slate-700 dark:bg-slate-100;
+  }
+
+  .c-toggle-knob {
+    @apply translate-x-0;
+  }
+
+  .c-toggle[data-enabled="true"] .c-toggle-knob {
+    @apply translate-x-5;
+  }
+
+  .c-theme-mode-button {
+    @apply text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200;
+  }
+
+  .c-theme-mode-button[data-active="true"] {
+    @apply bg-white text-slate-900 shadow-sm;
+  }
+
+  .c-app-shell[data-has-background="true"] {
+    background-image: linear-gradient(rgb(15 23 42 / 18%), rgb(15 23 42 / 18%)), var(--custom-background);
+    background-position: center;
+    background-size: cover;
+  }
 }

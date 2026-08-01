@@ -1,4 +1,4 @@
-import type { SearchEngine } from "../types";
+import type { SearchEngine } from "../../../shared/types";
 
 export const defaultSearchEngines: SearchEngine[] = [
   {
@@ -66,4 +66,3 @@ export const enginePresets: Record<string, Omit<SearchEngine, "displayUrl">> = {
     queryName: "q",
   },
 };
-

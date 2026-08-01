@@ -1,6 +1,6 @@
 import { onMounted, ref } from "vue";
-import type { Bookmark } from "../types";
-import { getDisplayUrl, getFaviconUrl, getNameFromUrl, getNormalizedUrl } from "../utils/url";
+import type { Bookmark } from "../../../shared/types";
+import { getDisplayUrl, getFaviconUrl, getNameFromUrl, getNormalizedUrl } from "../../../shared/url";
 
 export function useBookmarks() {
   const bookmarks = ref<Bookmark[]>([]);

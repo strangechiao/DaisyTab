@@ -1,7 +1,7 @@
 import { computed, ref } from "vue";
 import { defaultSearchEngines, enginePresets } from "../data/searchEngines";
-import type { SearchEngine } from "../types";
-import { getDisplayUrl, getNameFromUrl } from "../utils/url";
+import type { SearchEngine } from "../../../shared/types";
+import { getDisplayUrl, getNameFromUrl } from "../../../shared/url";
 
 export function useSearchEngines() {
   const searchEngines = ref<SearchEngine[]>([...defaultSearchEngines]);

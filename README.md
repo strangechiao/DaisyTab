@@ -1,7 +1,11 @@
-# WXT + Vue 3
+# DaisyTab
 
-This template should help get you started developing with Vue 3 in WXT.
+DaisyTab 是一个追求极致简洁的新标签页扩展。
 
-## Recommended IDE Setup
+## Development
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar).
+```bash
+npm run dev
+npm run compile
+npm run build
+```

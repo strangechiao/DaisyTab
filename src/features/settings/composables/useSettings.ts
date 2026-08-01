@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
-import type { AppSettings, ThemeMode } from "../types";
+import type { AppSettings, ThemeMode } from "../../../shared/types";
 
 export function useSettings() {
   const openInNewWindow = ref(false);

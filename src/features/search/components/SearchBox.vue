@@ -3,8 +3,8 @@ import { Icon } from "@iconify/vue";
 import { ref } from "vue";
 import SearchEngineMenu from "./SearchEngineMenu.vue";
 import SearchHistoryMenu from "./SearchHistoryMenu.vue";
-import SettingsMenu from "./SettingsMenu.vue";
-import type { SearchEngine, ThemeMode } from "../types";
+import SettingsMenu from "../../settings/components/SettingsMenu.vue";
+import type { SearchEngine, ThemeMode } from "../../../shared/types";
 
 const searchQuery = defineModel<string>("searchQuery", { required: true });
 const newEngineUrl = defineModel<string>("newEngineUrl", { required: true });
@@ -32,7 +32,6 @@ const emit = defineEmits<{
   backgroundSelected: [value: string];
   clearBackground: [];
   clearSearch: [];
-  closeBackground: [];
   dragEnd: [];
   dragMove: [engine: SearchEngine];
   dragStart: [engine: SearchEngine, event: DragEvent];
@@ -60,7 +59,6 @@ function clearSearch() {
 </script>
 
 <template>
-  <!-- 搜索表单主体 -->
   <form
     class="c-search-form"
     :data-focused="isSearchFocused"
@@ -69,12 +67,10 @@ function clearSearch() {
     :target="searchTarget"
     @submit="emit('saveHistory')"
   >
-    <!-- 左侧搜索引擎按钮 -->
     <button class="c-icon-button group" type="button" :aria-label="`选择搜索引擎，当前为 ${selectedEngine.name}`" @click="emit('toggleEngineMenu')">
       <Icon class="c-icon-lg" :icon="selectedEngine.icon" />
     </button>
 
-    <!-- 搜索关键词输入框 -->
     <input
       ref="searchInput"
       v-model="searchQuery"
@@ -86,22 +82,18 @@ function clearSearch() {
       @pointerdown="emit('openHistory')"
     />
 
-    <!-- 清空输入按钮，仅在有内容时显示 -->
     <button v-if="searchQuery" class="c-icon-button group" type="button" aria-label="清空搜索内容" @click="clearSearch">
       <Icon class="c-icon" icon="ph:x" />
     </button>
 
-    <!-- 提交搜索按钮 -->
     <button class="c-icon-button group" type="submit">
       <Icon class="c-icon" icon="ph:magnifying-glass" />
     </button>
 
-    <!-- 设置按钮 -->
     <button class="c-icon-button group" type="button" aria-label="打开设置" @click="emit('toggleSettingsMenu')">
       <Icon class="c-icon" icon="ph:gear-six" />
     </button>
 
-    <!-- 搜索引擎下拉菜单 -->
     <SearchEngineMenu
       v-model:new-engine-url="newEngineUrl"
       :dragged-engine="draggedEngine"
@@ -115,7 +107,6 @@ function clearSearch() {
       @select="emit('selectEngine', $event)"
     />
 
-    <!-- 搜索历史下拉菜单 -->
     <SearchHistoryMenu
       :history="searchHistory"
       :is-open="isSearchHistoryVisible"
@@ -123,7 +114,6 @@ function clearSearch() {
       @select="emit('selectHistory', $event)"
     />
 
-    <!-- 设置下拉菜单 -->
     <SettingsMenu
       :custom-background="customBackground"
       :is-bookmark-enabled="isBookmarkEnabled"

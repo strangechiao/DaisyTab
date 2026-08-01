@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { ThemeMode } from "../types";
+import type { ThemeMode } from "../../../shared/types";
 
-// 主题切换按钮，负责自己的选中态样式。
 const props = defineProps<{
   label: string;
   mode: ThemeMode;

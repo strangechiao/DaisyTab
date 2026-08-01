@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import type { SearchEngine } from "../types";
+import type { SearchEngine } from "../../../shared/types";
 
-// 新增搜索引擎输入框内容，父组件通过 v-model 读写。
 const newEngineUrl = defineModel<string>("newEngineUrl", { required: true });
 
-// 当前拖动项、菜单开关、搜索引擎列表。
 defineProps<{
   draggedEngine: SearchEngine | null;
   isOpen: boolean;
   searchEngines: SearchEngine[];
 }>();
 
-// 通知父组件添加、选择、删除、拖动排序搜索引擎。
 const emit = defineEmits<{
   add: [];
   dragEnd: [];
@@ -24,7 +21,6 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <!-- 搜索引擎下拉菜单过渡动画 -->
   <Transition
     enter-active-class="u-transition"
     enter-from-class="-translate-y-1 opacity-0"
@@ -33,12 +29,10 @@ const emit = defineEmits<{
     leave-from-class="translate-y-0 opacity-100"
     leave-to-class="-translate-y-1 opacity-0"
   >
-    <!-- 搜索引擎菜单面板 -->
     <div
       v-if="isOpen"
       class="absolute left-0 top-full z-10 mt-3 grid w-full gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_50px_rgb(15_23_42_/_12%)] dark:border-slate-700 dark:bg-slate-900"
     >
-      <!-- 新增搜索引擎输入行 -->
       <div class="flex items-center gap-3 rounded-full px-3 py-2 text-sm text-slate-600 dark:text-slate-300">
         <span class="grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 dark:bg-slate-800">
           <Icon class="size-6 text-slate-400 dark:text-slate-500" icon="ph:plus" />
@@ -47,12 +41,11 @@ const emit = defineEmits<{
           v-model="newEngineUrl"
           class="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-700 outline-0 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
           placeholder="输入搜索引擎地址后回车"
-          type="url"
+          type="text"
           @keydown.enter.prevent="emit('add')"
         />
       </div>
 
-      <!-- 搜索引擎列表项，可拖动排序 -->
       <div
         v-for="engine in searchEngines"
         :key="engine.name"
@@ -64,7 +57,6 @@ const emit = defineEmits<{
         @dragover.prevent
         @dragstart="emit('dragStart', engine, $event)"
       >
-        <!-- 点击选择这个搜索引擎 -->
         <button class="flex min-w-0 flex-1 items-center gap-3 text-left" type="button" @click="emit('select', engine)">
           <span class="grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 dark:bg-slate-800">
             <Icon class="size-6 text-slate-400 dark:text-slate-500" :icon="engine.icon" />
@@ -73,7 +65,6 @@ const emit = defineEmits<{
           <span class="min-w-0 truncate text-xs text-slate-400 dark:text-slate-500">{{ engine.displayUrl }}</span>
         </button>
 
-        <!-- 删除这个搜索引擎 -->
         <button
           class="u-transition grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-400 opacity-0 hover:bg-slate-200 hover:text-slate-600 group-hover:opacity-100 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
           type="button"

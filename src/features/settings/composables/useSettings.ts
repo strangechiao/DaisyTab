@@ -1,6 +1,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 import type { AppSettings, ThemeMode } from "../../../shared/types";
 
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (updateCallback: () => void) => void;
+};
+
 export function useSettings() {
   const openInNewWindow = ref(false);
   const isSearchHistoryEnabled = ref(true);
@@ -10,8 +14,12 @@ export function useSettings() {
   const prefersDarkMode = ref(false);
 
   const searchTarget = computed(() => (openInNewWindow.value ? "_blank" : undefined));
-  const isDarkMode = computed(() => themeMode.value === "dark" || (themeMode.value === "system" && prefersDarkMode.value));
+  const isDarkMode = computed(() => getIsDarkMode(themeMode.value));
   const hasCustomBackground = computed(() => Boolean(customBackground.value));
+
+  function getIsDarkMode(mode: ThemeMode) {
+    return mode === "dark" || (mode === "system" && prefersDarkMode.value);
+  }
 
   function loadSettings() {
     try {
@@ -59,8 +67,25 @@ export function useSettings() {
     customBackground.value = value;
   }
 
+  function applyThemeClass(nextIsDarkMode: boolean) {
+    document.documentElement.classList.toggle("dark", nextIsDarkMode);
+  }
+
   function setTheme(nextThemeMode: ThemeMode) {
-    themeMode.value = nextThemeMode;
+    const nextIsDarkMode = getIsDarkMode(nextThemeMode);
+    const viewTransitionDocument = document as ViewTransitionDocument;
+    const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!viewTransitionDocument.startViewTransition || shouldReduceMotion) {
+      themeMode.value = nextThemeMode;
+      applyThemeClass(nextIsDarkMode);
+      return;
+    }
+
+    viewTransitionDocument.startViewTransition(() => {
+      themeMode.value = nextThemeMode;
+      applyThemeClass(nextIsDarkMode);
+    });
   }
 
   function toggleOpenInNewWindow() {
@@ -94,9 +119,7 @@ export function useSettings() {
 
   watch([openInNewWindow, isSearchHistoryEnabled, isBookmarkEnabled, themeMode], saveSettings);
   watch(customBackground, saveCustomBackground);
-  watchEffect(() => {
-    document.documentElement.classList.toggle("dark", isDarkMode.value);
-  });
+  watch(isDarkMode, applyThemeClass, { immediate: true });
   watchEffect(() => {
     if (customBackground.value) {
       document.documentElement.style.setProperty("--custom-background", `url(${customBackground.value})`);

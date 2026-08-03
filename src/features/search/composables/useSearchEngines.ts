@@ -1,44 +1,52 @@
 import { computed, ref } from "vue";
 import { defaultSearchEngines, enginePresets } from "../data/searchEngines";
 import type { SearchEngine } from "../../../shared/types";
-import { getDisplayUrl, getNameFromUrl } from "../../../shared/url";
+import { getDisplayUrl } from "../../../shared/url";
+import { createFallbackSearchEngine, createPresetSearchEngine, discoverSearchEngineFromUrl } from "../utils/discoverSearchEngine";
 
 export function useSearchEngines() {
   const searchEngines = ref<SearchEngine[]>([...defaultSearchEngines]);
   const selectedEngine = ref<SearchEngine>(searchEngines.value[0]);
   const newEngineUrl = ref("");
   const draggedEngine = ref<SearchEngine | null>(null);
+  const isAddingEngine = ref(false);
   const queryName = computed(() => selectedEngine.value.queryName);
 
   function selectEngine(engine: SearchEngine) {
     selectedEngine.value = engine;
   }
 
-  function addEngineFromInput() {
+  async function addEngineFromInput() {
     const trimmedUrl = newEngineUrl.value.trim();
 
-    if (!trimmedUrl) {
+    if (!trimmedUrl || isAddingEngine.value) {
       return;
     }
+
+    isAddingEngine.value = true;
 
     try {
       const displayUrl = getDisplayUrl(trimmedUrl);
       const preset = enginePresets[displayUrl] ?? enginePresets[`www.${displayUrl}`];
-      const engine: SearchEngine = preset
-        ? { ...preset, displayUrl }
-        : {
-            name: getNameFromUrl(displayUrl),
-            icon: "ph:globe",
-            action: `https://${displayUrl}/search`,
-            displayUrl,
-            queryName: "q",
-          };
+      const engine = preset ? createPresetSearchEngine(trimmedUrl, preset) : await discoverSearchEngineFromUrl(trimmedUrl);
 
       searchEngines.value = [engine, ...searchEngines.value.filter((item) => item.displayUrl !== engine.displayUrl)];
       selectedEngine.value = engine;
       newEngineUrl.value = "";
     } catch {
-      newEngineUrl.value = "";
+      try {
+        const displayUrl = getDisplayUrl(trimmedUrl);
+        const preset = enginePresets[displayUrl] ?? enginePresets[`www.${displayUrl}`];
+        const engine = preset ? createPresetSearchEngine(trimmedUrl, preset) : createFallbackSearchEngine(trimmedUrl);
+
+        searchEngines.value = [engine, ...searchEngines.value.filter((item) => item.displayUrl !== engine.displayUrl)];
+        selectedEngine.value = engine;
+        newEngineUrl.value = "";
+      } catch {
+        newEngineUrl.value = "";
+      }
+    } finally {
+      isAddingEngine.value = false;
     }
   }
 
@@ -91,6 +99,7 @@ export function useSearchEngines() {
     addEngineFromInput,
     draggedEngine,
     endEngineDrag,
+    isAddingEngine,
     moveDraggedEngine,
     newEngineUrl,
     queryName,

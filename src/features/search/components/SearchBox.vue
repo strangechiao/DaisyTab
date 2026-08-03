@@ -12,6 +12,7 @@ const newEngineUrl = defineModel<string>("newEngineUrl", { required: true });
 defineProps<{
   customBackground: string;
   draggedEngine: SearchEngine | null;
+  isAddingEngine: boolean;
   isBookmarkEnabled: boolean;
   isEngineMenuOpen: boolean;
   isSearchFocused: boolean;
@@ -39,10 +40,10 @@ const emit = defineEmits<{
   openHistory: [];
   removeEngine: [engine: SearchEngine];
   removeHistory: [historyItem: string];
-  saveHistory: [];
   selectEngine: [engine: SearchEngine];
   selectHistory: [historyItem: string];
   setTheme: [themeMode: ThemeMode];
+  submitSearch: [];
   toggleBookmarks: [];
   toggleEngineMenu: [];
   toggleOpenInNewWindow: [];
@@ -62,10 +63,7 @@ function clearSearch() {
   <form
     class="c-search-form"
     :data-focused="isSearchFocused"
-    :action="selectedEngine.action"
-    method="get"
-    :target="searchTarget"
-    @submit="emit('saveHistory')"
+    @submit.prevent="emit('submitSearch')"
   >
     <button class="c-icon-button group" type="button" :aria-label="`选择搜索引擎，当前为 ${selectedEngine.name}`" @click="emit('toggleEngineMenu')">
       <Icon class="c-icon-lg" :icon="selectedEngine.icon" />
@@ -97,6 +95,7 @@ function clearSearch() {
     <SearchEngineMenu
       v-model:new-engine-url="newEngineUrl"
       :dragged-engine="draggedEngine"
+      :is-adding-engine="isAddingEngine"
       :is-open="isEngineMenuOpen"
       :search-engines="searchEngines"
       @add="emit('addEngine')"

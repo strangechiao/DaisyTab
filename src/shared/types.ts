@@ -4,6 +4,7 @@ export type SearchEngine = {
   action: string;
   displayUrl: string;
   queryName: string;
+  urlTemplate: string;
 };
 
 export type Bookmark = {

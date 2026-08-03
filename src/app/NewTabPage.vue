@@ -16,6 +16,7 @@ const {
   endEngineDrag,
   focusSearchInput,
   hasCustomBackground,
+  isAddingEngine,
   isBookmarkEnabled,
   isBookmarkModalOpen,
   isEngineMenuOpen,
@@ -47,6 +48,7 @@ const {
   selectedEngine,
   setTheme,
   startEngineDrag,
+  submitSearch,
   themeMode,
   toggleBookmarks,
   toggleEngineMenu,
@@ -72,6 +74,7 @@ const {
         v-model:search-query="searchQuery"
         :custom-background="customBackground"
         :dragged-engine="draggedEngine"
+        :is-adding-engine="isAddingEngine"
         :is-bookmark-enabled="isBookmarkEnabled"
         :is-engine-menu-open="isEngineMenuOpen"
         :is-search-focused="isSearchFocused"
@@ -97,7 +100,7 @@ const {
         @open-history="openHistoryMenu"
         @remove-engine="removeEngine"
         @remove-history="removeHistoryItem"
-        @save-history="saveSearchHistory"
+        @submit-search="submitSearch"
         @select-engine="selectEngine"
         @select-history="selectHistoryItem"
         @set-theme="setTheme"

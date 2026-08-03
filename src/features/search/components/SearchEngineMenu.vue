@@ -6,6 +6,7 @@ const newEngineUrl = defineModel<string>("newEngineUrl", { required: true });
 
 defineProps<{
   draggedEngine: SearchEngine | null;
+  isAddingEngine: boolean;
   isOpen: boolean;
   searchEngines: SearchEngine[];
 }>();
@@ -40,10 +41,12 @@ const emit = defineEmits<{
         <input
           v-model="newEngineUrl"
           class="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-700 outline-0 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
-          placeholder="输入搜索引擎地址后回车"
+          :disabled="isAddingEngine"
+          :placeholder="isAddingEngine ? '正在识别搜索规则...' : '输入搜索引擎地址后回车'"
           type="text"
           @keydown.enter.prevent="emit('add')"
         />
+        <Icon v-if="isAddingEngine" class="size-5 shrink-0 animate-spin text-slate-400 dark:text-slate-500" icon="ph:spinner-gap" />
       </div>
 
       <div

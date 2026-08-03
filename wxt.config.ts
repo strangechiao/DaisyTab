@@ -6,6 +6,7 @@ export default defineConfig({
   manifest: {
     name: 'DaisyTab',
     description: 'DaisyTab new tab extension',
+    optional_host_permissions: ['http://*/*', 'https://*/*'],
     icons: {
       16: 'icon/16.png',
       32: 'icon/32.png',

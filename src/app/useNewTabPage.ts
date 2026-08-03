@@ -3,6 +3,7 @@ import { useBookmarks } from "../features/bookmarks/composables/useBookmarks";
 import { useSearchEngines } from "../features/search/composables/useSearchEngines";
 import { useSearchHistory } from "../features/search/composables/useSearchHistory";
 import { useSettings } from "../features/settings/composables/useSettings";
+import type { SearchEngine } from "../shared/types";
 
 export function useNewTabPage() {
   const isEngineMenuOpen = ref(false);
@@ -54,6 +55,25 @@ export function useNewTabPage() {
   function saveSearchHistory() {
     searchHistory.saveSearchHistory();
     isHistoryMenuOpen.value = false;
+  }
+
+  function submitSearch() {
+    const query = searchHistory.searchQuery.value.trim();
+
+    if (!query) {
+      return;
+    }
+
+    searchHistory.saveSearchHistory();
+    isHistoryMenuOpen.value = false;
+
+    const searchUrl = buildSearchUrl(searchEngines.selectedEngine.value, query);
+
+    if (settings.searchTarget.value === "_blank") {
+      window.open(searchUrl, "_blank", "noopener,noreferrer");
+    } else {
+      window.location.href = searchUrl;
+    }
   }
 
   function selectHistoryItem(historyItem: string) {
@@ -110,6 +130,7 @@ export function useNewTabPage() {
     clearCustomBackground,
     clearSearch,
     focusSearchInput,
+    isAddingEngine: searchEngines.isAddingEngine,
     isEngineMenuOpen,
     isHistoryMenuOpen,
     isSearchFocused,
@@ -119,9 +140,21 @@ export function useNewTabPage() {
     saveSearchHistory,
     selectEngine,
     selectHistoryItem,
+    submitSearch,
     toggleEngineMenu,
     toggleSearchHistory,
     toggleSettingsMenu,
     updateCustomBackground,
   };
+}
+
+function buildSearchUrl(engine: SearchEngine, query: string) {
+  if (engine.urlTemplate.includes("%s")) {
+    return engine.urlTemplate.replace("%s", encodeURIComponent(query));
+  }
+
+  const searchUrl = new URL(engine.action);
+  searchUrl.searchParams.set(engine.queryName, query);
+
+  return searchUrl.href;
 }
